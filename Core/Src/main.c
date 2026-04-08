@@ -147,7 +147,7 @@ int main(void)
   {
     OLED_ShowString(0, 0, "MPU6050 OK", OLED_8X16);
     OLED_Update();
-    HAL_Delay(500);
+    HAL_Delay(300);
     OLED_Clear();
     OLED_ShowString(0, 0, "Calib Gyro...", OLED_8X16);
     OLED_Update();
