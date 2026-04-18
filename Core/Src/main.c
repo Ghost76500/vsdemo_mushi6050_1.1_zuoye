@@ -95,6 +95,7 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
 		HAL_UARTEx_ReceiveToIdle_IT(&huart2, readBuffer, sizeof(readBuffer));
 	}
 }
+
 /* USER CODE END 0 */
 
 /**
@@ -134,6 +135,9 @@ int main(void)
   MX_TIM4_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+  //HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
   // 初始化OLED
   HAL_Delay(20); // 等待OLED电源稳定
   OLED_Init();
@@ -151,7 +155,7 @@ int main(void)
     OLED_Clear();
     OLED_ShowString(0, 0, "Calib Gyro...", OLED_8X16);
     OLED_Update();
-    MPU_Calibrate_Gyro(800); // 约800*2ms≈1.6s静止平均
+    MPU_Calibrate_Gyro(300); // 约300*2ms≈0.6s静止平均
     OLED_Clear();
     OLED_ShowString(0, 0, "Calib Done", OLED_8X16);
   }
@@ -194,12 +198,13 @@ int main(void)
     MPU_Update_Attitude();
 
     // 仅读取MPU6050姿态角缓存
-    //MPU_Get_Pitch_Roll_Yaw(&pitch, &roll, &yaw);
+    MPU_Get_Pitch_Roll_Yaw(&pitch, &roll, &yaw);
     //temp = MPU_Get_Temperature();
     // 显示在OLED上
     
     OLED_Clear();
     
+    /*
     // 仅显示串口接收得到的两个变量
     OLED_ShowString(0, 0, "YawDeg:", OLED_8X16);
     sprintf(pitch_buf, "%.2f", rx_yaw_deg);
@@ -208,13 +213,24 @@ int main(void)
     OLED_ShowString(0, 16, "YawRad:", OLED_8X16);
     sprintf(roll_buf, "%.3f", rx_yaw_rad);
     OLED_ShowString(56, 16, roll_buf, OLED_8X16);
+    */
+
+    OLED_ShowString(0, 0, "Pitch:", OLED_8X16);
+    sprintf(pitch_buf, "%.1f", pitch);
+    OLED_ShowString(56, 0, pitch_buf, OLED_8X16);
+
+    OLED_ShowString(0, 16, "Roll:", OLED_8X16);
+    sprintf(roll_buf, "%.1f", roll);
+    OLED_ShowString(56, 16, roll_buf, OLED_8X16);
+
     
-    OLED_Update();
-    
-    uart_send_data(&huart1);
+    //uart_send_data(&huart1);
     
     private_uart_data_read();
-    private_uart_send_data(&huart1);
+    warning_oled_display();
+    private_uart_send_data(&huart2);
+
+    OLED_Update();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
