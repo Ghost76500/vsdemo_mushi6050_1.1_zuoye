@@ -6,13 +6,13 @@
 
 #define ROLL_WARNING_THRESHOLD 20.0f
 #define PITCH_WARNING_THRESHOLD 20.0f
-#define WARNING_SEND_COOLDOWN_MS 1000U
+#define WARNING_SEND_COOLDOWN_MS 2000U
 
-uint8_t flag_hongwai_warning = 0;
-uint8_t flag_qingxie_warning = 0;
-uint8_t is_flag_waring = 0;
-static uint8_t warning_send_initialized = 0;
-static uint32_t last_warning_send_tick = 0;
+static uint8_t flag_hongwai_warning = 0; // 红外警告标志位
+static uint8_t flag_qingxie_warning = 0; // 倾斜警告标志位
+static uint8_t is_flag_waring = 0; // 用于OLED显示的全局变量，表示当前是否有警告需要显示
+static uint8_t warning_send_initialized = 0; // 标志位，确保第一次发送警告时不受冷却时间限制
+static uint32_t last_warning_send_tick = 0; // 上次发送警告的系统时间戳（单位：毫秒）
 
 static float pitch, roll, yaw;
 
@@ -41,6 +41,8 @@ void private_uart_send_data(UART_HandleTypeDef *huart)
         } else {
             data_packet[3] = 0x00; // 无警告
         } 
+
+        data_packet[5] = 0x50; // 电池电量
         // 构建数据包
         
         data_packet[0] = 0x55; // 包头1
@@ -48,7 +50,7 @@ void private_uart_send_data(UART_HandleTypeDef *huart)
         data_packet[2] = 0x00;
         //data_packet[3] = 0x00; // 警告类型
         data_packet[4] = 0x00;
-        data_packet[5] = 0x00; // 预留数据位
+        //data_packet[5] = 0x00; // 预留数据位
         data_packet[6] = 0x00;
         data_packet[7] = 0x00; // 预留数据位
         data_packet[8] = 0x00;
@@ -80,17 +82,11 @@ void private_uart_data_read(void)
         flag_qingxie_warning = 1;
         is_flag_waring = 1;
         return;
-    } else {
-        flag_waring_transmission = 0;
-        flag_qingxie_warning = 0;
-        is_flag_waring = 0;
-    } 
-
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == GPIO_PIN_RESET) {
+    } else if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == GPIO_PIN_RESET) {
         flag_waring_transmission = 1;
         flag_hongwai_warning = 1;
         is_flag_waring = 1;
-        return;
+        //return;
     } else {
         flag_waring_transmission = 0;
         flag_hongwai_warning = 0;
